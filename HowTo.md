@@ -1,80 +1,24 @@
 ## What do we need
-1. TensorFlow
+1. Azure CLI
+2. Docker
+3. Azure Functions Core Tools
 
-2. AWS SDK for Python to read the model from S3 bucket
-```
-pip install boto3
-```
+4. Create a Python 3.6.* VirtualEnv and activate it
+5. From `AzTFServerless` folder, run `pip -r requirements.txt --ignore-installed`
 
-3. [Serverless](https://serverless.com/framework/docs/providers/aws/guide/installation/). For deployment to AWS lambda
+6. Check out the function locally by running `func host start`. This spins up a server. You can use the convenient `upload.html` file to upload an image to see the results from our ML model.
 
-4. [Create access key for AWS account](http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html)
+7. Complete instructions for functions deployment here: https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-python
+- Resource Group Creation
+- Storage Account Creation
+- Create Linux Function App (mine is called `tfserverless`)
 
-5. Setup AWS credentials in Serverless
-```
-serverless config credentials --provider aws --key <your_aws_access_key> --secret <your_aws_key_secret>
-```
+8. Deploy the Function App.
 
-6. [Install AWS console CLI](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
-```
-pip install awscli --upgrade --user
-aws --version
-```
-```
-aws-cli/1.11.189 Python/3.5.4 Linux/4.4.0-98-generic botocore/1.7.47
-```
-
-7. Setup AWS credentials with AWS console CLI:
-```
-aws configure
-```
-check ```~/.aws```. There you should find _config.txt_ and _credentials.txt_
-
-8. Export the model as protobuf 
-
-9. Two alternatives for model:
-   - Deploy it directly
-   - Store the model into S3 bucket, cache in /tmp space (Ephemeral disk capacity) and load it from there
-
-10. Two alternatives for image posting:
-    - POST method with image as body (works well on small images)
-    - Store test images into S3 bucket + POST method that gets bucket and image name as parameters 
-      (more flexible and works better for big images)
-
-11. Preparing TensorFlow for Lambda upload. Create EC2 Ubuntu Free Tier instance
-See https://github.com/ryfeus/lambda-packs.
-
-Enable your IP to connect over SSH in Amazon instance
+Depending on your system version of Python you might not be able to use both the VirtualEnv and the Azure CLI at the same time. Deploy instead by executing a build in a Docker container:
 
 ```
-ssh ec2-54-183-117-12.us-west-1.compute.amazonaws.com
-scp ubuntu@ec2-54-183-117-12.us-west-1.compute.amazonaws.com:~/tf_env.zip ~/Documents/tf_env.zip
+func azure functionapp publish tfserverless --build-native-deps
 ```
 
-```
-sudo apt-get update
-sudo apt-get install -y zip python-dev python-pip
-export LC_ALL=C
-pip install --upgrade pip
-sudo pip install virtualenv
-virtualenv tf_env
-source tf_env/bin/activate
-pip install tensorflow
-```
-```
-touch ~/tf_env/lib/python2.7/site-packages/google/__init__.py
-cd ~/tf_env/lib/python2.7/site-packages
-zip -r ~/tf_env.zip . --exclude \*.pyc *.DS_Store /external/* /tensorflow/contrib/* /tensorflow/include/unsupported/* /tensorflow/examples/* /tensorboard/* /tensorflow_tensorboard-0.4.0rc3.dist-info/* /pip/* /pip-9.0.1.dist-info/*
-```
-12. For service deployement:
-```
-serverless deploy
-```
-For service removal:
-```
-serverless remove
-```
-DO NOT DELETE LAMBDA FUNCTIONS MANUALLY, OTHERWISE SERVERLESS WILL FAIL TO DEPLOY NEXT TIME!
-Be aware - Serverless uses your AWS account to put stuff to S3 bucket!
-
-13. Adjust policy for a lambda function role to be able to access S3 bucket
+9. Update the action in the handy form upload page `upload.html` provided to point to the new URL including the function key param.

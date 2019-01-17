@@ -1,2 +1,0 @@
-tensorflow==1.4.0
-boto3==1.4.7
